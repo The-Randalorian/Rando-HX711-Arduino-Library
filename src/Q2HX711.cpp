@@ -66,15 +66,15 @@ long Q2HX711::readRaw() {
 }
 
 long Q2HX711::read() {
-  return read_raw() ^ 0x00800000;
+  return readRaw() ^ 0x00800000;
 }
 
 long Q2HX711::readSigned() {
-  long value = read_raw();
+  long value = readRaw();
   return value & 0x00800000 ? value | 0xFF000000 : value & 0x00FFFFFF;
 }
 
 double Q2HX711::readUnits() {
   // dividing by 8388607 will yield a double value in the domain [-1,1).
-  return ((double)read_signed()) / 8388608.0 * SCALE;
+  return ((double)readSigned()) / 8388608.0 * SCALE;
 }
