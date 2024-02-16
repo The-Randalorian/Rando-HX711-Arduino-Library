@@ -5,6 +5,15 @@ Q2HX711::Q2HX711(byte output_pin, byte clock_pin) {
   CLOCK_PIN  = clock_pin;
   OUT_PIN  = output_pin;
   GAIN = 1;
+  SCALE = 1.0;
+  pinsConfigured = false;
+}
+
+Q2HX711::Q2HX711(byte output_pin, byte clock_pin, double units_scale) {
+  CLOCK_PIN  = clock_pin;
+  OUT_PIN  = output_pin;
+  GAIN = 1;
+  SCALE = units_scale;
   pinsConfigured = false;
 }
 
@@ -38,7 +47,7 @@ void Q2HX711::setGain(byte gain) {
   read();
 }
 
-long Q2HX711::read() {
+long Q2HX711::readRaw() {
    while (!readyToSend());
 
   byte data[3];
@@ -53,6 +62,19 @@ long Q2HX711::read() {
     digitalWrite(CLOCK_PIN, LOW);
   }
 
-  data[2] ^= 0x80;
   return ((uint32_t) data[2] << 16) | ((uint32_t) data[1] << 8) | (uint32_t) data[0];
+}
+
+long Q2HX711::read() {
+  return read_raw() ^ 0x00800000;
+}
+
+long Q2HX711::readSigned() {
+  long value = read_raw();
+  return value & 0x00800000 ? value | 0xFF000000 : value & 0x00FFFFFF;
+}
+
+double Q2HX711::readUnits() {
+  // dividing by 8388607 will yield a double value in the domain [-1,1).
+  return ((double)read_signed()) / 8388608.0 * SCALE;
 }
